@@ -2420,6 +2420,8 @@ for(const Y in O)[1,2,3].forEach(T=>{
  tx.forEach(l=>{let k=fam(l);if(O[Y].split&&T==3&&k=='story')k+=l.w0>30?' B':' A';(u[k]=u[k]||[]).push(l)});
  const s2=[];(O[Y].lit[T]||[]).forEach(k=>{(u[k]||[]).sort((a,b)=>a.w0-b.w0||(a.id<b.id?-1:1)).forEach(l=>s2.push(l));delete u[k]});
  for(const k in u)u[k].forEach(l=>s2.push(l));put(s2)}});
+/* one-off: drop any browser-saved custom order for these classes so the teacher order shows */
+try{if(localStorage.getItem('p_ict_order_ver')!='2026-11-24'){let ch=0;for(const k in S.order)if(/^(num|lit)\|(4|6|7)\|/.test(k)){delete S.order[k];ch=1}if(ch)sv('p_ict_order',S.order);localStorage.setItem('p_ict_order_ver','2026-11-24')}}catch(e){}
 })();
 /*ASSESS_LESSON_TEXT*/(function(){
 const NM={story:'stories',playscript:'playscripts',poem:'poems',instruction:'instructions','reference text':'reference texts','information text':'information texts',persuasive:'persuasive texts',recount:'recounts','media text':'media texts',explanation:'explanations'};
