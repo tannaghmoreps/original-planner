@@ -2408,12 +2408,14 @@ const NUMWEEK={"NUM-P4-W1-1":1,"NUM-P4-W1-2":1,"NUM-P4-W1-3":1,"NUM-P4-W1-4":1,"
 LES.forEach(l=>{const w=NUMWEEK[l.id];if(w!=null){l.w0=w;l.week=w}});
 /* Literacy: each unit is one week's Reading + Writing pair (keyed by its original week). Units are re-sequenced in teacher order within the calendar term. */
 const LITORD={4:{1:[4,10,11,5,7,8,9,1,2,3,15],2:[14,20,21,22,17,16,23],3:[35,27,28,29,31,32,34,33,37]},
-6:{1:[1,2,7,8,9,10,11,15,5,3,4],2:[14,22,20,21,23,16,17]},
+6:{1:[1,2,7,8,9,10,11,15,5,3,4],2:[33,34,14,22,20,21,23],3:[27,28,29,31,32,16,17,35,37]},
 7:{1:[1,2,3,11,5,4,9,10,7,8,15],2:[14,17,20,21,22,23,16],3:[32,33,34,35,27,28,29,31,37]}};
 const sh=w=>w==15?12:w;
+/* P6: persuasive / Christmas letters move to weeks 14-16 (before Christmas); the two poetry units swap into their old Term 3 weeks */
+const LITSLOT={'6-2':[14,16,17,20,21,22,23],'6-3':[27,28,29,31,32,33,34,35,37]};
 const U=LES.filter(l=>l.subj=='lit'&&!l.assessmentWeek&&/^(Reading|Writing) /.test(l.topic)).map(l=>({l,w:l.w0}));
-for(const Y in LITORD)for(const T in LITORD[Y]){const keys=LITORD[Y][T],slots=keys.slice().sort((a,b)=>sh(a)-sh(b));
- keys.forEach((k,i)=>U.forEach(u=>{if(u.l.year==Y&&u.w==k){u.l.w0=slots[i];u.l.week=slots[i]}}))}
+for(const Y in LITORD)for(const T in LITORD[Y]){const keys=LITORD[Y][T],slots=(LITSLOT[Y+'-'+T]||keys).slice().sort((a,b)=>sh(a)-sh(b));
+ keys.forEach((k,i)=>U.forEach(u=>{if(u.l.year==Y&&u.w==k){u.l.w0=slots[i];u.l.week=slots[i];if(Y==6)u.l.term=+T}}))}
 /* one-off: drop any browser-saved custom order for these classes so the teacher order shows */
 try{if(localStorage.getItem('p_ict_order_ver')!='2026-11-24'){let ch=0;for(const k in S.order)if(/^(num|lit)\|(4|6|7)\|/.test(k)){delete S.order[k];ch=1}if(ch)sv('p_ict_order',S.order);localStorage.setItem('p_ict_order_ver','2026-11-24')}}catch(e){}
 })();
