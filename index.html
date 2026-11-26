@@ -2479,7 +2479,7 @@ TV[4]=()=>{const d=D();return `<div class="tv3 tv4">
  ${attnChips(d.y)}
  <div class="tv4g"><div class="tv4l"><section class="tv-card"><div class="tv-ch"><h3>This week's lessons</h3><small>${TRIP(d)}</small></div><div class="tv-g2">${SJ4.map(s=>SUBB(d,s)).join('')}</div></section>
  <section class="tv-card"><div class="tv-ch"><h3>Progress by subject</h3><small>solid = taught · pale = due by now</small></div><div class="tv-g2 tv-pg">${BARS(d)}</div></section></div>
- <aside class="tv4r"><section class="tv-card"><div class="tv-ch"><h3>Quick actions</h3></div>${QA()}</section><section class="tv-card"><div class="tv-ch"><h3>Coming up next week</h3></div>${NXT(d)}</section></aside></div>
+ <aside class="tv4r"><section class="tv-card"><div class="tv-ch"><h3>Quick actions</h3></div>${QA()}</section>${window.stkSticky?stkSticky():''}<section class="tv-card"><div class="tv-ch"><h3>Coming up next week</h3></div>${NXT(d)}</section></aside></div>
  </div>${bkCard()}`};
 viewToday=function(){return TV[4]()};
 })();
@@ -3211,6 +3211,40 @@ window.AS_go=v=>{AS.v=v;AS.m='PTM';S.year=4;render()};
 /* ---------- plumbing: navigation, hero, Assessments link ---------- */
 try{IC.adata='<path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/>';const keep={map:MODEN.map,shelf:MODEN.shelf};delete MODEN.map;delete MODEN.shelf;MODEN.adata='Test data';MODEN.map=keep.map;MODEN.shelf=keep.shelf}catch(e){}
 const _ra=renderAssess;renderAssess=function(){_ra();try{const h=$('main').querySelector('h2');if(h)h.insertAdjacentHTML('afterend','<button class="btn noprint" onclick="S.mode=\'adata\';render()">📈 Test data (CAT, PTE, PTM)</button>')}catch(e){}};
+})();
+
+/*P1_STICKY*/(function(){
+/* P1 sticky note: quick observations kept against a child's unique number only. Stored in this browser (key p1_child_notes). Never synced, never names. */
+const KEY='p1_child_notes';
+const ld=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){return{}}};
+const sv2=d=>{try{localStorage.setItem(KEY,JSON.stringify(d));return true}catch(e){return false}};
+const pad=n=>String(n).padStart(2,'0');
+const stamp=d=>`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+let draftN='',draftT='',msg='';
+const E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function recent(){const d=ld(),all=[];Object.keys(d).forEach(k=>d[k].forEach(n=>all.push({k,...n})));return all.sort((a,b)=>b.t-a.t).slice(0,3)}
+function noteHTML(){const r=recent(),tot=Object.keys(ld()).length;
+ return `<div class="stk-pin"></div><div class="stk-h"><b>Quick notes</b><span>${stamp(new Date()).slice(0,10)}</span></div>
+ <label class="stk-l">Child's number</label><input id="stkN" class="stk-i" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="e.g. 12" value="${E(draftN)}" oninput="stkIn()">
+ <label class="stk-l">What did you notice?</label><textarea id="stkT" class="stk-i stk-ta" rows="3" maxlength="400" placeholder="Quick observation…" oninput="stkIn()">${E(draftT)}</textarea>
+ <div class="stk-row"><button class="stk-b" onclick="stkAdd()">＋ Add note</button><button class="stk-b stk-b2" onclick="stkOpen()">All child notes${tot?' ('+tot+')':''}</button></div>
+ <div class="stk-m" id="stkM" role="status">${msg}</div>
+ ${r.length?`<div class="stk-r"><b>Latest</b>${r.map(n=>`<div><u>No. ${E(n.k)}</u> ${E(n.x.length>70?n.x.slice(0,70)+'…':n.x)}</div>`).join('')}</div>`:''}
+ <div class="stk-w">Use the number only. Never type a child's name.</div>`}
+window.stkSticky=()=>S.year==1?`<section class="stk" id="stkBox">${noteHTML()}</section>`:'';
+window.stkIn=()=>{draftN=($('stkN').value||'').replace(/\D/g,'');if($('stkN').value!==draftN)$('stkN').value=draftN;draftT=$('stkT').value;msg=''};
+window.stkAdd=()=>{const n=draftN.replace(/^0+(?=\d)/,''),t=draftT.trim();
+ if(!n){msg='Add the child\'s number first.'}else if(!t){msg='Write a short note first.'}else if(/[A-Za-z]{3,}/.test('')){}else{const d=ld();(d[n]=d[n]||[]).push({t:Date.now(),x:t});if(sv2(d)){msg='✓ Saved for No. '+n;draftT=''}else msg='Could not save. Check browser storage.'}
+ const b=$('stkBox');if(b)b.innerHTML=noteHTML();if(msg[0]=='✓'){const t=$('stkT');if(t)t.focus()}};
+window.stkOpen=()=>{window._stkQ='';stkList()};
+function stkList(){const d=ld(),q=window._stkQ||'',ks=Object.keys(d).filter(k=>!q||k.includes(q)).sort((a,b)=>a-b);
+ modal(`<h2 class="text-xl font-bold mb-1">P1 child notes</h2><p class="text-sm text-gray-600 mb-3">Notes are kept against each child's number for the year. They are saved in this browser only and contain no names.</p>
+ <div class="flex gap-2 flex-wrap mb-3 noprint"><input class="stk-i" style="max-width:170px" inputmode="numeric" placeholder="Find a number" value="${E(q)}" oninput="window._stkQ=this.value.replace(/\\D/g,'');stkList();document.querySelector('.mbox input').focus();var i=document.querySelector('.mbox input');i.setSelectionRange(99,99)"><button class="btn" onclick="stkCsv()">⬇ Download CSV</button></div>
+ ${ks.length?ks.map(k=>`<div class="bg-white border rounded-xl p-3 mb-3"><h3 class="font-bold mb-1" style="color:#046a38">Child No. ${E(k)} <span class="text-xs text-gray-500">· ${d[k].length} note${d[k].length>1?'s':''}</span></h3>${d[k].slice().sort((a,b)=>b.t-a.t).map(n=>`<div class="text-sm py-1 border-t" style="border-color:#eef3ee"><span class="text-xs text-gray-500">${stamp(new Date(n.t))}</span><br>${E(n.x)} <a class="noprint text-xs" style="color:#a23b1b;cursor:pointer" onclick="stkDel('${k}',${n.t})">delete</a></div>`).join('')}</div>`).join(''):'<p class="text-sm text-gray-600">No notes yet.</p>'}`)}
+window.stkDel=(k,t)=>{if(!confirm('Delete this note?'))return;const d=ld();d[k]=(d[k]||[]).filter(n=>n.t!=t);if(!d[k].length)delete d[k];sv2(d);stkList()};
+window.stkCsv=()=>{const d=ld(),rows=[['Child number','Date','Observation']];Object.keys(d).sort((a,b)=>a-b).forEach(k=>d[k].slice().sort((a,b)=>a.t-b.t).forEach(n=>rows.push([k,stamp(new Date(n.t)),n.x])));
+ const c=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='P1-child-notes.csv';a.click()};
+try{const st=document.createElement('style');st.textContent='.stk{position:relative;background:#fff59a;background-image:linear-gradient(#fff59a,#fff08a);border-radius:4px 4px 18px 4px;padding:26px 16px 12px;box-shadow:0 10px 18px rgba(80,60,0,.22),0 2px 0 rgba(0,0,0,.05);transform:rotate(-1deg);margin:6px 4px 14px;font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive;color:#4a3b00}.stk-pin{position:absolute;top:-9px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff7a6b,#c2321f);box-shadow:0 3px 4px rgba(0,0,0,.3)}.stk-h{display:flex;justify-content:space-between;font-size:18px;margin-bottom:6px}.stk-h span{font-size:13px;opacity:.7}.stk-l{display:block;font-size:13px;margin:6px 0 2px;font-weight:700}.stk-i{width:100%;background:rgba(255,255,255,.55);border:1px dashed #b89a00;border-radius:6px;padding:7px 9px;font:inherit;font-size:15px;color:#3b2f00}.stk-i:focus{outline:2px solid #046a38;background:#fff}.stk-ta{resize:vertical;min-height:70px;line-height:1.4}.stk-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.stk-b{background:#046a38;color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;min-height:44px}.stk-b2{background:#fff;color:#046a38;border:2px solid #046a38}.stk-m{min-height:20px;font-size:13.5px;margin-top:6px;font-weight:700}.stk-r{font-size:13px;margin-top:6px;border-top:1px dashed #b89a00;padding-top:6px}.stk-r div{margin-top:3px}.stk-w{font-size:12px;margin-top:8px;opacity:.8}@media(prefers-reduced-motion:no-preference){.stk{transition:transform .2s}.stk:hover{transform:rotate(0)}}@media print{.stk{display:none}}';document.head.appendChild(st)}catch(e){}
 })();
 
 S.mode='today';applyEdits();render();
